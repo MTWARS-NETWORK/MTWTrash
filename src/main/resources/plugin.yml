@@ -1,0 +1,20 @@
+name: MTWTrash
+version: '1.0'
+main: nl.phoenixdev.mTWTrash.MTWTrash
+api-version: '1.21'
+softdepend:
+  - ItemsAdder
+
+commands:
+  trash:
+    description: MTWTrash beheer commando
+    usage: /trash <create|delete|loot|cooldown|list|reload>
+    permission: mtwtrash.admin
+
+permissions:
+  mtwtrash.use:
+    description: Sta spelers toe om in prullenbakken te graaien
+    default: true
+  mtwtrash.admin:
+    description: Toegang tot prullenbak beheer commando's
+    default: op

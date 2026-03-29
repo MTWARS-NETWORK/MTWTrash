@@ -1,0 +1,24 @@
+database:
+  host: localhost
+  port: 3306
+  name: mtwtrash
+  username: root
+  password: password
+
+settings:
+  itemsadder-ids:
+    - "iasurvival:big_trashcan"
+  animation-pane-delay: 5
+  animation-reveal-delay: 20
+  default-cooldown: 300
+
+messages:
+  prefix: "&8[&6MTWTrash&8] &r"
+  cooldown: "&cJe moet nog &e{time} &cwachten voordat je weer in deze prullenbak kunt graaien."
+  no-permission: "&cJe hebt geen toestemming om dit te doen."
+  no-loot: "&7Er zit niets bruikbaars in deze prullenbak."
+  trashcan-created: "&aPrullenbak geregistreerd met ID: &e{id}"
+  trashcan-deleted: "&aPrullenbak &e{id} &averwijderd."
+  trashcan-not-found: "&cGeen prullenbak gevonden op deze locatie."
+  reload: "&aConfiguratie herladen."
+  not-looking-at-trash: "&cJe kijkt niet naar een prullenbak."
