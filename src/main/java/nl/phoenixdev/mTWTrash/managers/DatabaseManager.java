@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nl.phoenixdev.mTWTrash.MTWTrash;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,27 +22,26 @@ public class DatabaseManager {
     }
 
     public boolean connect() {
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
+        }
+
+        File dbFile = new File(plugin.getDataFolder(), "database.db");
+
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:mysql://"
-                + plugin.getConfig().getString("database.host", "localhost")
-                + ":" + plugin.getConfig().getInt("database.port", 3306)
-                + "/" + plugin.getConfig().getString("database.name", "mtwtrash")
-                + "?useSSL=false&autoReconnect=true&characterEncoding=utf8");
-        config.setUsername(plugin.getConfig().getString("database.username", "root"));
-        config.setPassword(plugin.getConfig().getString("database.password", ""));
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setConnectionTimeout(30000);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
-        config.setPoolName("MTWTrash-Pool");
+
+        config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
+        config.setDriverClassName("org.sqlite.JDBC");
+
+        config.setMaximumPoolSize(1);
+        config.setPoolName("MTWTrash-SQLite-Pool");
 
         try {
             dataSource = new HikariDataSource(config);
             createTables();
             return true;
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Kon geen verbinding maken met de database: " + e.getMessage(), e);
+            plugin.getLogger().log(Level.SEVERE, "Kon het SQLite-bestand niet initialiseren: " + e.getMessage(), e);
             return false;
         }
     }
@@ -54,7 +54,7 @@ public class DatabaseManager {
                              "trashcan_id VARCHAR(100) NOT NULL, " +
                              "last_used BIGINT NOT NULL, " +
                              "PRIMARY KEY (player_uuid, trashcan_id)" +
-                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;")) {
+                             ");")) {
             stmt.executeUpdate();
         }
     }
@@ -79,8 +79,7 @@ public class DatabaseManager {
     public void setCooldown(UUID playerUUID, String trashcanId) {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO trash_cooldowns (player_uuid, trashcan_id, last_used) VALUES (?, ?, ?) " +
-                             "ON DUPLICATE KEY UPDATE last_used = VALUES(last_used)")) {
+                     "INSERT OR REPLACE INTO trash_cooldowns (player_uuid, trashcan_id, last_used) VALUES (?, ?, ?)")) {
             stmt.setString(1, playerUUID.toString());
             stmt.setString(2, trashcanId);
             stmt.setLong(3, System.currentTimeMillis());

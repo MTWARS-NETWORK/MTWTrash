@@ -7,7 +7,9 @@ import nl.phoenixdev.mTWTrash.gui.LootEditorGUI;
 import nl.phoenixdev.mTWTrash.gui.ManagementGUI;
 import nl.phoenixdev.mTWTrash.managers.TrashCanManager;
 import nl.phoenixdev.mTWTrash.models.TrashCanData;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,6 +17,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -62,14 +65,20 @@ public class TrashCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        Entity nearby = getNearbyFurniture(player);
-        if (nearby == null) {
-            player.sendMessage(plugin.msg("not-looking-at-trash"));
+        Location location = player.getLocation().add(0, -1, 0);
+        Block block = location.getBlock();
+        if (block == null) {
             return;
         }
 
-        CustomFurniture furniture = CustomFurniture.byAlreadySpawned(nearby);
+        if (!block.getType().isSolid()) {
+            player.sendMessage(ChatColor.RED + "Je moet op een blok staan!");
+            return;
+        }
+
+        CustomFurniture furniture = CustomFurniture.spawnPreciseNonSolid("saturnstudio:garbage_pack_silver_trashcan", player.getLocation());
         if (furniture == null) {
+            System.out.println(2);
             player.sendMessage(plugin.msg("not-looking-at-trash"));
             return;
         }
@@ -80,7 +89,7 @@ public class TrashCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        Location loc = nearby.getLocation();
+        Location loc = player.getLocation();
         TrashCanData existing = plugin.getTrashCanManager().getByLocation(loc);
         if (existing != null) {
             player.sendMessage(plugin.msg("prefix") + "\u00A7cEr bestaat al een prullenbak op deze locatie: \u00A7e" + existing.getId());
@@ -187,7 +196,11 @@ public class TrashCommand implements CommandExecutor, TabCompleter {
     private Entity getNearbyFurniture(Player player) {
         Location loc = player.getLocation();
         for (Entity entity : loc.getWorld().getNearbyEntities(loc, 3, 3, 3)) {
+            if (entity instanceof Player) {
+                continue;
+            }
             CustomFurniture furniture = CustomFurniture.byAlreadySpawned(entity);
+            System.out.println(entity);
             if (furniture != null) {
                 String iaId = furniture.getNamespacedID();
                 if (plugin.getTrashCanManager().getConfiguredItemsAdderIds().contains(iaId)) {
